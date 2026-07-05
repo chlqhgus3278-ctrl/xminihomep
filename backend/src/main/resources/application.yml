@@ -1,0 +1,49 @@
+spring:
+  application:
+    name: folio-backend
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:}
+            client-secret: ${GOOGLE_CLIENT_SECRET:}
+            scope: email, profile
+            redirect-uri: ${app.url}/login/oauth2/code/google
+
+app:
+  url: ${APP_URL:http://localhost:8080}
+  frontend-url: ${FRONTEND_URL:http://localhost:5173}
+  jwt:
+    secret: ${JWT_SECRET:local-dev-only-secret-change-me-32bytes-min}
+    expiry-ms: ${JWT_EXPIRY_MS:86400000}
+  upload:
+    image-max-size-bytes: ${IMAGE_MAX_SIZE_BYTES:5242880}   # 5MB
+    bgm-max-size-bytes: ${BGM_MAX_SIZE_BYTES:20971520}      # 20MB
+
+cloudflare:
+  r2:
+    endpoint: ${R2_ENDPOINT:}
+    access-key: ${R2_ACCESS_KEY:}
+    secret-key: ${R2_SECRET_KEY:}
+    bucket: ${R2_BUCKET:}
+    public-url: ${R2_PUBLIC_URL:}

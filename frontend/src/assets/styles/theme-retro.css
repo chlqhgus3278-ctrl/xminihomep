@@ -1,0 +1,12 @@
+.theme-retro {
+  --bg: #b8cfe8;
+  --surface: #c8dff0;
+  --surface2: #ddeaf6;
+  --border: #9bbdd8;
+  --primary: #3a86c0;
+  --header-gradient: linear-gradient(180deg, #5ba3d9, #2e77b2);
+  --text: #1a4a6e;
+  --text-muted: #5a8ab0;
+  --counter-color: #ffe066;
+  --btn-shadow: 0 2px 0 #9bbdd8;
+}
