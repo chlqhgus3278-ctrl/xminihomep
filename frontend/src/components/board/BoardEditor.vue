@@ -1,16 +1,20 @@
 <template>
   <div class="board-editor">
-    <input v-model="title" placeholder="제목" class="title-input" />
-    <QuillEditor
-      v-model:content="content"
-      content-type="html"
-      :options="quillOptions"
-      theme="snow"
-    />
+    <!-- 구조화 게시판(경력/학력/기술스택/자격증·어학)은 전용 폼 사용 -->
+    <component v-if="isStructured" :is="structuredForm" v-model="structuredData" />
+
+    <!-- 경력기술서/자기소개서는 기존 Quill 에디터 유지 -->
+    <template v-else>
+      <input v-model="title" placeholder="제목" class="title-input" />
+      <QuillEditor
+        v-model:content="content"
+        content-type="html"
+        :options="quillOptions"
+        theme="snow"
+      />
+    </template>
+
     <div class="editor-actions">
-      <label>
-        <input type="checkbox" v-model="isPublic" /> 공개
-      </label>
       <button type="button" @click="save">저장</button>
       <button type="button" @click="cancel">취소</button>
     </div>
@@ -21,6 +25,22 @@
 import { defineComponent } from 'vue'
 import { QuillEditor } from '@vueup/vue-quill'
 import '@vueup/vue-quill/dist/vue-quill.snow.css'
+import { STRUCTURED_TYPES, SECTION_LABELS, parseStructured } from '../../utils/resume'
+import CareerHistoryForm from './forms/CareerHistoryForm.vue'
+import EducationForm from './forms/EducationForm.vue'
+import SkillsForm from './forms/SkillsForm.vue'
+import CertLanguageForm from './forms/CertLanguageForm.vue'
+
+const FORM_COMPONENTS = {
+  CAREER_HISTORY: CareerHistoryForm,
+  EDUCATION: EducationForm,
+  SKILLS: SkillsForm,
+  CERT: CertLanguageForm
+}
+
+function defaultData(boardType) {
+  return boardType === 'SKILLS' ? { tags: [] } : { entries: [] }
+}
 
 export default defineComponent({
   name: 'BoardEditor',
@@ -33,7 +53,8 @@ export default defineComponent({
     return {
       title: this.post?.title || '',
       content: this.post?.content || '',
-      isPublic: this.post ? this.post.isPublic : true,
+      structuredData:
+        parseStructured(this.post?.content) || defaultData(this.boardType),
       quillOptions: {
         modules: {
           toolbar: [
@@ -47,13 +68,23 @@ export default defineComponent({
       }
     }
   },
+  computed: {
+    isStructured() {
+      return STRUCTURED_TYPES.includes(this.boardType)
+    },
+    structuredForm() {
+      return FORM_COMPONENTS[this.boardType]
+    }
+  },
   methods: {
     save() {
       this.$emit('save', {
         boardType: this.boardType,
-        title: this.title,
-        content: this.content, // Quill이 생성한 HTML 문자열 그대로 서버로 전송
-        isPublic: this.isPublic
+        title: this.isStructured ? SECTION_LABELS[this.boardType] : this.title,
+        content: this.isStructured
+          ? JSON.stringify(this.structuredData)
+          : this.content, // Quill이 생성한 HTML 문자열 그대로 서버로 전송
+        isPublic: true // 공개/비공개 구분 없이 항상 공개
       })
     },
     cancel() {

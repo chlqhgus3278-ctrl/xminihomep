@@ -2,8 +2,10 @@
   <div class="board-list">
     <h2 class="section-title">{{ activeLabel }}</h2>
 
+    <SettingsPanel v-if="isSettings && editable" />
+
     <BoardEditor
-      v-if="showEditor"
+      v-else-if="showEditor"
       :key="activeType"
       :board-type="activeType"
       :post="currentPost"
@@ -14,9 +16,6 @@
     <template v-else-if="currentPost">
       <div v-if="editable" class="owner-actions">
         <button type="button" @click="startEdit">수정하기</button>
-        <button type="button" @click="handleToggleVisibility">
-          {{ currentPost.isPublic ? '공개' : '비공개' }}
-        </button>
         <button type="button" @click="handleDelete">삭제</button>
       </div>
       <BoardDetail :post="currentPost" />
@@ -34,20 +33,12 @@ import { defineComponent } from 'vue'
 import { useBoardStore } from '../../stores/useBoardStore'
 import BoardEditor from './BoardEditor.vue'
 import BoardDetail from './BoardDetail.vue'
-
-const SECTION_LABELS = {
-  CAREER_HISTORY: '경력사항',
-  CAREER_DESC: '경력기술서',
-  INTRO: '자기소개서',
-  EDUCATION: '학력',
-  CERT: '자격증',
-  LANGUAGE: '어학',
-  SKILLS: '기술스택'
-}
+import SettingsPanel from '../settings/SettingsPanel.vue'
+import { SECTION_LABELS } from '../../utils/resume'
 
 export default defineComponent({
   name: 'BoardList',
-  components: { BoardEditor, BoardDetail },
+  components: { BoardEditor, BoardDetail, SettingsPanel },
   props: {
     editable: { type: Boolean, default: false },
     // 지정하면 이 목록을 그대로 쓰고(공개 페이지), 지정 안 하면 내 글 목록을 직접 불러온다(마이페이지).
@@ -65,7 +56,11 @@ export default defineComponent({
     activeType() {
       return this.boardStore.activeType
     },
+    isSettings() {
+      return this.activeType === 'SETTINGS'
+    },
     activeLabel() {
+      if (this.isSettings) return '설정'
       return SECTION_LABELS[this.activeType] || this.activeType
     },
     sourcePosts() {
@@ -107,9 +102,6 @@ export default defineComponent({
     async handleDelete() {
       if (!confirm('삭제하시겠습니까?')) return
       await this.boardStore.deletePost(this.currentPost.id)
-    },
-    async handleToggleVisibility() {
-      await this.boardStore.toggleVisibility(this.currentPost.id)
     }
   }
 })

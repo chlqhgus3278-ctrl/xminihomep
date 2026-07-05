@@ -46,14 +46,6 @@ export const useBoardStore = defineStore('board', {
     async deletePost(id) {
       await axios.delete(`/api/board/${id}`)
       this.posts = this.posts.filter((post) => post.id !== id)
-    },
-    async toggleVisibility(id) {
-      const res = await axios.patch(`/api/board/${id}/visibility`)
-      const index = this.posts.findIndex((post) => post.id === id)
-      if (index !== -1) {
-        this.posts.splice(index, 1, res.data.data)
-      }
-      return res.data.data
     }
   }
 })

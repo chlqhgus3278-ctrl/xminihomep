@@ -9,6 +9,7 @@
       :username="$route.params.username"
       :is-owner="isOwner"
       :skin-config="profileStore.skinConfig"
+      :board-posts="boardPosts"
       :home-link="`/${$route.params.username}`"
     >
       <BoardList :posts="boardPosts" :editable="false" />

@@ -49,34 +49,54 @@
 
     <div class="divider" />
 
-    <VisitorCounter :username="username" />
+    <div class="skills-section">
+      <div class="skills-head">
+        <p class="skills-title">기술스택</p>
+        <button v-if="isOwner" type="button" class="edit-toggle" @click="showSkillsModal = true">
+          ✏️ 수정
+        </button>
+      </div>
+      <div v-if="skillTags.length" class="tag-list">
+        <span v-for="tag in skillTags" :key="tag" class="skill-tag">{{ tag }}</span>
+      </div>
+      <p v-else class="skills-empty">등록된 기술이 없습니다.</p>
+    </div>
 
-    <div class="divider" />
-
-    <GuestbookWidget :username="username" />
+    <SkillsEditModal v-if="showSkillsModal" :post="skillsPost" @close="showSkillsModal = false" />
   </aside>
 </template>
 
 <script>
 import { defineComponent } from 'vue'
 import { useProfileStore } from '../../stores/useProfileStore'
-import VisitorCounter from './VisitorCounter.vue'
-import GuestbookWidget from '../guestbook/GuestbookWidget.vue'
+import { parseStructured } from '../../utils/resume'
+import SkillsEditModal from '../skills/SkillsEditModal.vue'
 
 export default defineComponent({
   name: 'SidebarLeft',
-  components: { VisitorCounter, GuestbookWidget },
+  components: { SkillsEditModal },
   props: {
     profile: { type: Object, default: null },
     username: { type: String, required: true },
-    isOwner: { type: Boolean, default: false }
+    isOwner: { type: Boolean, default: false },
+    // 기술스택 표시용 게시글 목록 (마이페이지: 내 글, 공개페이지: 공개 글)
+    posts: { type: Array, default: () => [] }
   },
   setup() {
     return { profileStore: useProfileStore() }
   },
+  computed: {
+    skillsPost() {
+      return this.posts.find((post) => post.boardType === 'SKILLS') || null
+    },
+    skillTags() {
+      return parseStructured(this.skillsPost?.content)?.tags || []
+    }
+  },
   data() {
     return {
       isEditing: false,
+      showSkillsModal: false,
       saving: false,
       form: {
         homepageTitle: '',
@@ -269,5 +289,27 @@ export default defineComponent({
 .divider {
   border-top: 1px dashed var(--border);
   margin: 1rem 0;
+}
+
+.skills-section {
+  text-align: left;
+}
+
+.skills-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.skills-title {
+  margin: 0;
+  font-weight: 700;
+}
+
+.skills-empty {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
 }
 </style>

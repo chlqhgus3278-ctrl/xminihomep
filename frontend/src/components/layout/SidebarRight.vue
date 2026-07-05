@@ -14,28 +14,37 @@
       </button>
       <template v-if="isOwner">
         <div class="menu-divider" />
-        <router-link to="/settings" class="menu-item">설정</router-link>
+        <button
+          type="button"
+          class="menu-item"
+          :class="{ active: boardStore.activeType === 'SETTINGS' }"
+          @click="selectSection('SETTINGS')"
+        >
+          설정
+        </button>
       </template>
     </nav>
+
+    <div class="menu-divider" />
+
+    <VisitorCounter :username="username" />
+
+    <div class="menu-divider" />
+
+    <GuestbookWidget :username="username" />
   </aside>
 </template>
 
 <script>
 import { defineComponent } from 'vue'
 import { useBoardStore } from '../../stores/useBoardStore'
-
-const SECTIONS = [
-  { value: 'CAREER_HISTORY', label: '경력사항' },
-  { value: 'CAREER_DESC', label: '경력기술서' },
-  { value: 'INTRO', label: '자기소개서' },
-  { value: 'EDUCATION', label: '학력' },
-  { value: 'CERT', label: '자격증' },
-  { value: 'LANGUAGE', label: '어학' },
-  { value: 'SKILLS', label: '기술스택' }
-]
+import { MENU_SECTIONS } from '../../utils/resume'
+import VisitorCounter from './VisitorCounter.vue'
+import GuestbookWidget from '../guestbook/GuestbookWidget.vue'
 
 export default defineComponent({
   name: 'SidebarRight',
+  components: { VisitorCounter, GuestbookWidget },
   props: {
     isOwner: { type: Boolean, default: false },
     homeLink: { type: String, required: true },
@@ -45,7 +54,7 @@ export default defineComponent({
     return { boardStore: useBoardStore() }
   },
   data() {
-    return { sections: SECTIONS }
+    return { sections: MENU_SECTIONS }
   },
   methods: {
     selectSection(type) {
@@ -93,5 +102,9 @@ export default defineComponent({
 .menu-divider {
   border-top: 1px dashed var(--border);
   margin: 0.5rem 0;
+}
+
+.sidebar-right > .menu-divider {
+  margin: 1rem 0;
 }
 </style>

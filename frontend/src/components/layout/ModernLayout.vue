@@ -15,6 +15,7 @@
         :profile="profile"
         :username="username"
         :is-owner="isOwner"
+        :posts="boardPosts"
       />
 
       <main class="modern-col modern-col--main">
@@ -47,7 +48,8 @@ export default defineComponent({
     username: { type: String, required: true },
     isOwner: { type: Boolean, default: false },
     homeLink: { type: String, required: true },
-    skinConfig: { type: Object, default: () => ({}) }
+    skinConfig: { type: Object, default: () => ({}) },
+    boardPosts: { type: Array, default: () => [] }
   }
 })
 </script>

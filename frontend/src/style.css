@@ -47,6 +47,222 @@ button:hover {
   border-color: #646cff;
 }
 
+/* ===== 이력서 구조화 게시판 공용 스타일 (폼/뷰) ===== */
+.resume-form,
+.resume-view {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.entry-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.85rem;
+  border: 1px solid var(--border, #ccc);
+  border-radius: 6px;
+  background: var(--surface2, transparent);
+}
+
+.entry-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.field label {
+  font-size: 0.78rem;
+  color: var(--text-muted, #666);
+}
+
+.field input,
+.field select,
+.field textarea {
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--border, #ccc);
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  background: var(--surface, #fff);
+  color: var(--text, inherit);
+}
+
+.field input:disabled,
+.field select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.field textarea {
+  resize: vertical;
+}
+
+.field-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.6rem;
+}
+
+.field-row .grow {
+  flex: 1;
+  min-width: 140px;
+}
+
+.inline-check {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  padding-bottom: 0.45rem;
+  white-space: nowrap;
+}
+
+.required {
+  color: #e05252;
+}
+
+.byte-counter {
+  float: right;
+  font-size: 0.75rem;
+  color: var(--text-muted, #888);
+}
+
+.period-badge {
+  font-size: 0.75rem;
+  color: var(--primary, #3a86c0);
+  border: 1px solid var(--primary, #3a86c0);
+  border-radius: 10px;
+  padding: 0.1rem 0.5rem;
+  margin-bottom: 0.4rem;
+  white-space: nowrap;
+}
+
+.optional-fields {
+  border: 1px dashed var(--border, #ccc);
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+}
+
+.optional-fields summary {
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--text-muted, #666);
+}
+
+.optional-fields[open] summary {
+  margin-bottom: 0.5rem;
+}
+
+.add-button {
+  align-self: flex-start;
+  font-size: 0.85rem;
+  border: 1px dashed var(--primary, #3a86c0);
+  color: var(--primary, #3a86c0);
+  background: transparent;
+}
+
+.remove-button {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  color: #e05252;
+}
+
+.total-summary {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--primary, #3a86c0);
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-muted, #888);
+}
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.skill-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 12px;
+  border: 1px solid var(--primary, #3a86c0);
+  color: var(--primary, #3a86c0);
+  font-size: 0.8rem;
+  background: var(--surface2, transparent);
+}
+
+.tag-remove {
+  border: none;
+  background: transparent;
+  padding: 0 0.1rem;
+  font-size: 0.9rem;
+  line-height: 1;
+  color: inherit;
+}
+
+.view-card {
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--border, #ccc);
+  border-radius: 6px;
+}
+
+.view-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.view-title {
+  font-size: 0.95rem;
+}
+
+.current-badge {
+  font-size: 0.72rem;
+  color: var(--primary, #3a86c0);
+  border: 1px solid var(--primary, #3a86c0);
+  border-radius: 10px;
+  padding: 0.05rem 0.45rem;
+}
+
+.view-sub {
+  margin: 0.3rem 0 0;
+  font-size: 0.82rem;
+  color: var(--text-muted, #666);
+}
+
+.view-sub .period-badge {
+  margin-left: 0.4rem;
+  margin-bottom: 0;
+}
+
+.view-body {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  white-space: pre-line;
+}
+
+.view-optional {
+  margin: 0.5rem 0 0;
+  font-size: 0.78rem;
+  color: var(--text-muted, #888);
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;

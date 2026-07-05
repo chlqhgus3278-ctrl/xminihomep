@@ -1,10 +1,7 @@
 <template>
-  <div class="settings-page">
-    <router-link to="/">← 뒤로</router-link>
-    <h1>설정</h1>
-
+  <div class="settings-panel">
     <section>
-      <h2>테마</h2>
+      <h3>테마</h3>
       <div class="theme-options">
         <label class="theme-option">
           <input type="radio" value="retro" v-model="selectedTheme" @change="applyTheme" />
@@ -26,7 +23,7 @@
     </section>
 
     <section>
-      <h2>커스텀 색상</h2>
+      <h3>커스텀 색상</h3>
       <div class="color-pickers">
         <label class="color-field">
           포인트 색상
@@ -41,27 +38,12 @@
     </section>
 
     <section>
-      <h2>배경음악(BGM)</h2>
+      <h3>배경음악(BGM)</h3>
       <div v-if="profileStore.profile?.bgmUrl" class="bgm-current">
         <span>{{ profileStore.profile.bgmTitle }}</span>
         <button type="button" @click="handleDeleteBgm">삭제</button>
       </div>
       <input v-else type="file" accept="audio/*" @change="handleUploadBgm" />
-    </section>
-
-    <section>
-      <h2>섹션별 공개 여부</h2>
-      <div class="section-visibility">
-        <label class="section-toggle" v-for="type in boardTypes" :key="type.value">
-          <input type="checkbox" :checked="isSectionPublic(type.value)" @change="toggleSection(type.value)" />
-          {{ type.label }}
-        </label>
-      </div>
-
-      <label class="overall-visibility">
-        <input type="checkbox" v-model="overallPublic" @change="applyVisibility" />
-        홈피 전체 공개
-      </label>
     </section>
   </div>
 </template>
@@ -69,41 +51,26 @@
 <script>
 import { defineComponent } from 'vue'
 import axios from 'axios'
-import { useProfileStore } from '../stores/useProfileStore'
-import { useBoardStore } from '../stores/useBoardStore'
-
-const BOARD_TYPES = [
-  { value: 'CAREER_HISTORY', label: '경력사항' },
-  { value: 'CAREER_DESC', label: '경력기술서' },
-  { value: 'INTRO', label: '자기소개서' },
-  { value: 'EDUCATION', label: '학력' },
-  { value: 'CERT', label: '자격증' },
-  { value: 'LANGUAGE', label: '어학' },
-  { value: 'SKILLS', label: '기술스택' }
-]
+import { useProfileStore } from '../../stores/useProfileStore'
 
 export default defineComponent({
-  name: 'SettingsPage',
+  name: 'SettingsPanel',
   setup() {
     return {
-      profileStore: useProfileStore(),
-      boardStore: useBoardStore()
+      profileStore: useProfileStore()
     }
   },
   data() {
     return {
-      boardTypes: BOARD_TYPES,
       selectedTheme: 'retro',
       skinPrimary: '#3a86c0',
-      skinBg: '#b8cfe8',
-      overallPublic: true
+      skinBg: '#b8cfe8'
     }
   },
   async created() {
     const res = await axios.get('/api/settings')
     const settings = res.data.data
     this.selectedTheme = settings.theme || 'retro'
-    this.overallPublic = settings.isPublic
     if (settings.skinConfig?.['--primary']) this.skinPrimary = settings.skinConfig['--primary']
     if (settings.skinConfig?.['--bg']) this.skinBg = settings.skinConfig['--bg']
     this.profileStore.skinConfig = settings.skinConfig || {}
@@ -111,7 +78,6 @@ export default defineComponent({
     if (!this.profileStore.hasProfile) {
       await this.profileStore.fetchMine()
     }
-    await this.boardStore.fetchMyPosts()
   },
   methods: {
     async applyTheme() {
@@ -132,36 +98,19 @@ export default defineComponent({
     },
     async handleDeleteBgm() {
       await this.profileStore.deleteBgm()
-    },
-    isSectionPublic(type) {
-      const posts = this.boardStore.postsByType(type)
-      return posts.length === 0 || posts.every((post) => post.isPublic)
-    },
-    async toggleSection(type) {
-      const shouldBePublic = !this.isSectionPublic(type)
-      const posts = this.boardStore.postsByType(type)
-      await Promise.all(
-        posts
-          .filter((post) => post.isPublic !== shouldBePublic)
-          .map((post) => this.boardStore.toggleVisibility(post.id))
-      )
-    },
-    async applyVisibility() {
-      await axios.put('/api/settings/visibility', { isPublic: this.overallPublic })
     }
   }
 })
 </script>
 
 <style scoped>
-.settings-page {
-  max-width: 480px;
-  margin: 0 auto;
-  padding: 2rem;
-}
-
 section {
   margin-bottom: 2rem;
+}
+
+section h3 {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
 }
 
 .theme-options {
@@ -213,25 +162,5 @@ section {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-}
-
-.section-visibility {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  margin-bottom: 1rem;
-}
-
-.section-toggle {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.overall-visibility {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-weight: 700;
 }
 </style>

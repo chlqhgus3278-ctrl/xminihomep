@@ -11,6 +11,7 @@
       :username="authStore.myUsername"
       :is-owner="true"
       :skin-config="profileStore.skinConfig"
+      :board-posts="boardStore.posts"
       home-link="/"
     >
       <BoardList editable />
@@ -22,6 +23,7 @@
 import { defineComponent } from 'vue'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useProfileStore } from '../stores/useProfileStore'
+import { useBoardStore } from '../stores/useBoardStore'
 import RetroLayout from '../components/layout/RetroLayout.vue'
 import ModernLayout from '../components/layout/ModernLayout.vue'
 import BoardList from '../components/board/BoardList.vue'
@@ -32,7 +34,8 @@ export default defineComponent({
   setup() {
     return {
       authStore: useAuthStore(),
-      profileStore: useProfileStore()
+      profileStore: useProfileStore(),
+      boardStore: useBoardStore()
     }
   },
   computed: {
