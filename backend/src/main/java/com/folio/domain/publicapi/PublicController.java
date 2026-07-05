@@ -3,7 +3,7 @@ package com.folio.domain.publicapi;
 import com.folio.common.ApiResponse;
 import com.folio.domain.board.BoardPost;
 import com.folio.domain.board.BoardType;
-import com.folio.domain.guestbook.GuestbookEntry;
+import com.folio.domain.guestbook.GuestbookEntryResponse;
 import com.folio.domain.guestbook.GuestbookService;
 import com.folio.domain.visit.VisitCount;
 import jakarta.servlet.http.HttpServletRequest;
@@ -45,15 +45,26 @@ public class PublicController {
     }
 
     @GetMapping("/guestbook")
-    public ApiResponse<List<GuestbookEntry>> getGuestbook(@PathVariable String username) {
-        return ApiResponse.success(guestbookService.getEntries(username));
+    public ApiResponse<Map<String, Object>> getGuestbook(@PathVariable String username,
+                                                           @RequestParam(defaultValue = "0") int page,
+                                                           @RequestParam(defaultValue = "10") int size) {
+        return ApiResponse.success(guestbookService.getEntriesPage(username, page, Math.min(size, 50)));
     }
 
     @PostMapping("/guestbook")
-    public ApiResponse<GuestbookEntry> createGuestbookEntry(@PathVariable String username,
-                                                              @AuthenticationPrincipal Long authorUserId,
-                                                              @RequestBody Map<String, String> body) {
+    public ApiResponse<GuestbookEntryResponse> createGuestbookEntry(@PathVariable String username,
+                                                                      @AuthenticationPrincipal Long authorUserId,
+                                                                      @RequestBody Map<String, String> body) {
         return ApiResponse.success(guestbookService.create(username, authorUserId, body.get("message")));
+    }
+
+    @PostMapping("/guestbook/{entryId}/comments")
+    public ApiResponse<GuestbookEntryResponse.GuestbookCommentResponse> addGuestbookComment(
+            @PathVariable String username,
+            @PathVariable Long entryId,
+            @AuthenticationPrincipal Long authorUserId,
+            @RequestBody Map<String, String> body) {
+        return ApiResponse.success(guestbookService.addComment(username, entryId, authorUserId, body.get("message")));
     }
 
     @PostMapping("/visit")

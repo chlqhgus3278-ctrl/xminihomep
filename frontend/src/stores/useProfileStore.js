@@ -36,6 +36,12 @@ export const useProfileStore = defineStore('profile', {
       await axios.put('/api/settings/skin', skinConfig)
       this.skinConfig = skinConfig
     },
+    async updateLayout(sections) {
+      const res = await axios.put('/api/settings/layout', { sections })
+      if (this.profile) {
+        this.profile.layoutConfig = res.data.data.layoutConfig
+      }
+    },
     async uploadImage(file) {
       const formData = new FormData()
       formData.append('file', file)

@@ -14,12 +14,15 @@ public interface VisitCountRepository extends JpaRepository<VisitCount, Long> {
 
     // VisitCount는 @MapsId로 PK가 미리 채워지기 때문에 save()가 이를 기존 엔티티로 오인해
     // merge(UPDATE)를 시도하다 실패한다. INSERT ... ON CONFLICT로 원자적으로 생성/증가시킨다.
+    // 자정 스케줄러는 서버가 꺼져 있으면 못 도므로, 날짜가 바뀌었으면 여기서 today를 1로 새로 시작한다.
     @Modifying
     @Query(value = """
             INSERT INTO visit_counts (user_id, total, today, date_reset)
             VALUES (:ownerId, 1, 1, CURRENT_DATE)
             ON CONFLICT (user_id) DO UPDATE
-            SET total = visit_counts.total + 1, today = visit_counts.today + 1
+            SET total = visit_counts.total + 1,
+                today = CASE WHEN visit_counts.date_reset < CURRENT_DATE THEN 1 ELSE visit_counts.today + 1 END,
+                date_reset = CURRENT_DATE
             """, nativeQuery = true)
     void upsertIncrement(@Param("ownerId") Long ownerId);
 

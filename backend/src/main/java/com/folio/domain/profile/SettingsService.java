@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -16,6 +17,10 @@ import java.util.Set;
 public class SettingsService {
 
     private static final Set<String> ALLOWED_THEMES = Set.of("retro", "modern");
+
+    /** 메인 대시보드 구획에 넣을 수 있는 섹션 (경력기술서는 경력사항으로 일원화되어 제외) */
+    private static final Set<String> ALLOWED_LAYOUT_SECTIONS =
+            Set.of("CAREER_HISTORY", "INTRO", "EDUCATION", "CERT");
 
     private final ProfileService profileService;
     private final ObjectMapper objectMapper;
@@ -43,6 +48,25 @@ public class SettingsService {
     }
 
     @Transactional
+    public Map<String, Object> updateLayout(Long userId, Map<String, Object> body) {
+        Object sections = body.get("sections");
+        if (!(sections instanceof List<?> list)) {
+            throw new IllegalArgumentException("sections 목록이 필요합니다.");
+        }
+        for (Object section : list) {
+            if (!(section instanceof String s) || !ALLOWED_LAYOUT_SECTIONS.contains(s)) {
+                throw new IllegalArgumentException("지원하지 않는 섹션입니다: " + section);
+            }
+        }
+        if (list.stream().distinct().count() != list.size()) {
+            throw new IllegalArgumentException("같은 게시판을 중복 배치할 수 없습니다.");
+        }
+        Profile profile = profileService.getMyProfile(userId);
+        profile.setLayoutConfig(writeJson(Map.of("sections", list)));
+        return toSettingsMap(profile);
+    }
+
+    @Transactional
     public Map<String, Object> updateVisibility(Long userId, Map<String, Object> body) {
         Object isPublic = body.get("isPublic");
         if (!(isPublic instanceof Boolean)) {
@@ -57,6 +81,7 @@ public class SettingsService {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("theme", profile.getTheme());
         result.put("skinConfig", readJson(profile.getSkinConfig()));
+        result.put("layoutConfig", readJson(profile.getLayoutConfig()));
         result.put("isPublic", profile.getIsPublic());
         return result;
     }

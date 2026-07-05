@@ -1,7 +1,13 @@
 <template>
   <div id="portfolio-content" class="theme-modern modern-layout" :style="skinConfig">
     <header class="modern-header">
-      <h1>{{ profile?.homepageTitle || profile?.displayName || username }}</h1>
+      <EditableTitle
+        class="header-title"
+        :profile="profile"
+        :username="username"
+        :is-owner="isOwner"
+        :fallback-title="profile?.displayName || username"
+      />
       <div class="header-actions">
         <BgmPlayer :bgm-url="profile?.bgmUrl" :bgm-title="profile?.bgmTitle" />
         <PdfExportButton class="header-btn" :username="username" />
@@ -25,7 +31,6 @@
       <SidebarRight
         class="modern-col modern-col--right"
         :is-owner="isOwner"
-        :home-link="homeLink"
         :username="username"
       />
     </div>
@@ -36,18 +41,18 @@
 import { defineComponent } from 'vue'
 import SidebarLeft from './SidebarLeft.vue'
 import SidebarRight from './SidebarRight.vue'
+import EditableTitle from './EditableTitle.vue'
 import BgmPlayer from '../bgm/BgmPlayer.vue'
 import PdfExportButton from '../common/PdfExportButton.vue'
 import ShareButton from '../common/ShareButton.vue'
 
 export default defineComponent({
   name: 'ModernLayout',
-  components: { SidebarLeft, SidebarRight, BgmPlayer, PdfExportButton, ShareButton },
+  components: { SidebarLeft, SidebarRight, EditableTitle, BgmPlayer, PdfExportButton, ShareButton },
   props: {
     profile: { type: Object, default: null },
     username: { type: String, required: true },
     isOwner: { type: Boolean, default: false },
-    homeLink: { type: String, required: true },
     skinConfig: { type: Object, default: () => ({}) },
     boardPosts: { type: Array, default: () => [] }
   }
@@ -71,10 +76,14 @@ export default defineComponent({
   background: var(--surface);
 }
 
-.modern-header h1 {
-  margin: 0;
+.modern-header .header-title {
   font-size: 1.5rem;
   font-weight: 600;
+}
+
+.modern-header .header-title :deep(.title-input) {
+  border-color: var(--border);
+  background: var(--surface2, var(--surface));
 }
 
 .header-actions {

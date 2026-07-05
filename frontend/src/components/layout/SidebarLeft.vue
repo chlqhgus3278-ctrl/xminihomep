@@ -30,12 +30,26 @@
       </div>
 
       <form v-if="isEditing" class="edit-form" @submit.prevent="handleSave">
-        <label>홈피 제목<input v-model="form.homepageTitle" placeholder="OO의 홈피" /></label>
-        <label>이름<input v-model="form.displayName" placeholder="이름" /></label>
-        <label>위치<input v-model="form.location" placeholder="위치" /></label>
-        <label>이메일<input v-model="form.emailPublic" type="email" placeholder="공개 이메일" /></label>
-        <label>연락처<input v-model="form.phone" placeholder="연락처" /></label>
-        <label>소개<textarea v-model="form.intro" placeholder="소개" rows="2" /></label>
+        <label class="form-row">
+          <span class="form-label">이름 <em class="required-mark">*</em></span>
+          <input v-model="form.displayName" placeholder="이름" />
+        </label>
+        <label class="form-row">
+          <span class="form-label">위치</span>
+          <input v-model="form.location" placeholder="위치" />
+        </label>
+        <label class="form-row">
+          <span class="form-label">이메일</span>
+          <input v-model="form.emailPublic" type="email" placeholder="공개 이메일" />
+        </label>
+        <label class="form-row">
+          <span class="form-label">연락처</span>
+          <input v-model="form.phone" placeholder="연락처" />
+        </label>
+        <label class="form-row form-row--top">
+          <span class="form-label">소개 <em class="required-mark">*</em></span>
+          <textarea v-model="form.intro" placeholder="소개" rows="3" />
+        </label>
       </form>
 
       <template v-else>
@@ -70,6 +84,7 @@
 import { defineComponent } from 'vue'
 import { useProfileStore } from '../../stores/useProfileStore'
 import { parseStructured } from '../../utils/resume'
+import { showAlert } from '../../utils/dialog'
 import SkillsEditModal from '../skills/SkillsEditModal.vue'
 
 export default defineComponent({
@@ -99,7 +114,6 @@ export default defineComponent({
       showSkillsModal: false,
       saving: false,
       form: {
-        homepageTitle: '',
         displayName: '',
         location: '',
         emailPublic: '',
@@ -110,7 +124,6 @@ export default defineComponent({
   },
   methods: {
     startEdit() {
-      this.form.homepageTitle = this.profile?.homepageTitle || ''
       this.form.displayName = this.profile?.displayName || ''
       this.form.location = this.profile?.location || ''
       this.form.emailPublic = this.profile?.emailPublic || ''
@@ -122,10 +135,19 @@ export default defineComponent({
       this.isEditing = false
     },
     async handleSave() {
+      if (!this.form.displayName.trim()) {
+        await showAlert('이름을 입력해 주세요.')
+        return
+      }
+      if (!this.form.intro.trim()) {
+        await showAlert('소개를 입력해 주세요.')
+        return
+      }
       this.saving = true
       try {
         await this.profileStore.updateProfile({ ...this.form })
         this.isEditing = false
+        await showAlert('저장되었습니다.')
       } finally {
         this.saving = false
       }
@@ -141,7 +163,7 @@ export default defineComponent({
       try {
         await this.profileStore.uploadImage(file)
       } catch (e) {
-        alert(e.response?.data?.message || '사진 업로드에 실패했습니다.')
+        await showAlert(e.response?.data?.message || '사진 업로드에 실패했습니다.')
       } finally {
         this.saving = false
       }
@@ -263,27 +285,51 @@ export default defineComponent({
 .edit-form {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.45rem;
   text-align: left;
 }
 
-.edit-form label {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
+/* 라벨 칸 고정폭 + 입력 칸 나머지 폭으로 줄을 딱 맞춘다 */
+.form-row {
+  display: grid;
+  grid-template-columns: 3.2rem 1fr;
+  align-items: center;
+  gap: 0.4rem;
   font-size: 0.72rem;
   color: var(--text-muted);
+}
+
+.form-row--top {
+  align-items: start;
+}
+
+.form-row--top .form-label {
+  padding-top: 0.4rem;
+}
+
+.form-label {
+  text-align: right;
+}
+
+.required-mark {
+  color: #e05252;
+  font-style: normal;
 }
 
 .edit-form input,
 .edit-form textarea {
   width: 100%;
-  padding: 0.35rem;
+  padding: 0.35rem 0.45rem;
   border: 1px solid var(--border, #ccc);
   border-radius: 4px;
   font-size: 0.8rem;
   font-family: inherit;
   box-sizing: border-box;
+  min-width: 0;
+}
+
+.edit-form textarea {
+  resize: vertical;
 }
 
 .divider {

@@ -1,9 +1,9 @@
 <template>
   <div class="board-editor">
-    <!-- 구조화 게시판(경력/학력/기술스택/자격증·어학)은 전용 폼 사용 -->
+    <!-- 구조화 게시판(경력/자기소개서/학력/기술스택/자격증·어학)은 전용 폼 사용 -->
     <component v-if="isStructured" :is="structuredForm" v-model="structuredData" />
 
-    <!-- 경력기술서/자기소개서는 기존 Quill 에디터 유지 -->
+    <!-- 구조화되지 않은 예전 게시판 타입은 Quill 에디터 유지 -->
     <template v-else>
       <input v-model="title" placeholder="제목" class="title-input" />
       <QuillEditor
@@ -27,12 +27,14 @@ import { QuillEditor } from '@vueup/vue-quill'
 import '@vueup/vue-quill/dist/vue-quill.snow.css'
 import { STRUCTURED_TYPES, SECTION_LABELS, parseStructured } from '../../utils/resume'
 import CareerHistoryForm from './forms/CareerHistoryForm.vue'
+import IntroForm from './forms/IntroForm.vue'
 import EducationForm from './forms/EducationForm.vue'
 import SkillsForm from './forms/SkillsForm.vue'
 import CertLanguageForm from './forms/CertLanguageForm.vue'
 
 const FORM_COMPONENTS = {
   CAREER_HISTORY: CareerHistoryForm,
+  INTRO: IntroForm,
   EDUCATION: EducationForm,
   SKILLS: SkillsForm,
   CERT: CertLanguageForm

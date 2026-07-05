@@ -78,6 +78,13 @@ public class Profile {
     @Column(name = "skin_config", columnDefinition = "jsonb")
     private String skinConfig = "{}";
 
+    /** 메인(대시보드) 레이아웃 설정 JSON. 예: {"sections": ["CAREER_HISTORY", ...]} */
+    @Getter(AccessLevel.NONE)
+    @Builder.Default
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "layout_config", columnDefinition = "jsonb")
+    private String layoutConfig = "{}";
+
     @Column(name = "bgm_url", columnDefinition = "TEXT")
     private String bgmUrl;
 
@@ -96,5 +103,10 @@ public class Profile {
     @JsonRawValue
     public String getSkinConfig() {
         return skinConfig;
+    }
+
+    @JsonRawValue
+    public String getLayoutConfig() {
+        return layoutConfig;
     }
 }

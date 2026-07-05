@@ -2,12 +2,12 @@
 // 경력사항·학력·기술스택·자격증/어학 게시판은 content 컬럼에 JSON 문자열을 저장한다.
 
 /** 구조화 폼을 쓰는 게시판 타입 (나머지는 Quill 에디터 유지) */
-export const STRUCTURED_TYPES = ['CAREER_HISTORY', 'EDUCATION', 'SKILLS', 'CERT']
+export const STRUCTURED_TYPES = ['CAREER_HISTORY', 'INTRO', 'EDUCATION', 'SKILLS', 'CERT']
 
-/** 사이드바/설정/목록에서 공유하는 섹션 정의. 어학은 자격증과 합쳐 CERT 하나로 표시한다. */
+/** 사이드바/설정/목록에서 공유하는 섹션 정의. 어학은 자격증과 합쳐 CERT 하나로 표시한다.
+ *  경력기술서(CAREER_DESC)는 경력사항의 담당업무/커리어 요약으로 일원화되어 메뉴에서 제외한다. */
 export const SECTIONS = [
   { value: 'CAREER_HISTORY', label: '경력사항' },
-  { value: 'CAREER_DESC', label: '경력기술서' },
   { value: 'INTRO', label: '자기소개서' },
   { value: 'EDUCATION', label: '학력' },
   { value: 'SKILLS', label: '기술스택' },
@@ -18,6 +18,12 @@ export const SECTION_LABELS = Object.fromEntries(SECTIONS.map((s) => [s.value, s
 
 /** 우측 메뉴에 노출할 섹션. 기술스택은 좌측 프로필 아래에 상시 표시되므로 제외한다. */
 export const MENU_SECTIONS = SECTIONS.filter((s) => s.value !== 'SKILLS')
+
+/** 메인 대시보드 구획에 넣을 수 있는 섹션 */
+export const MAIN_SECTION_CHOICES = MENU_SECTIONS
+
+/** 메인 대시보드 기본 4구획 */
+export const DEFAULT_MAIN_SECTIONS = ['CAREER_HISTORY', 'INTRO', 'EDUCATION', 'CERT']
 
 /** 사람인/잡코리아 방식 byte 계산: 한글 등 non-ASCII 2byte, 영문/숫자/공백 1byte */
 export function calcBytes(text) {

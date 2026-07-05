@@ -1,7 +1,13 @@
 <template>
   <div id="portfolio-content" class="theme-retro retro-layout" :style="skinConfig">
     <header class="retro-header">
-      <h1>{{ profile?.homepageTitle || `${profile?.displayName || username}의 홈피` }}</h1>
+      <EditableTitle
+        class="header-title"
+        :profile="profile"
+        :username="username"
+        :is-owner="isOwner"
+        :fallback-title="`${profile?.displayName || username}의 홈피`"
+      />
       <div class="header-actions">
         <BgmPlayer :bgm-url="profile?.bgmUrl" :bgm-title="profile?.bgmTitle" />
         <PdfExportButton class="header-btn" :username="username" />
@@ -25,7 +31,6 @@
       <SidebarRight
         class="retro-col retro-col--right"
         :is-owner="isOwner"
-        :home-link="homeLink"
         :username="username"
       />
     </div>
@@ -36,18 +41,18 @@
 import { defineComponent } from 'vue'
 import SidebarLeft from './SidebarLeft.vue'
 import SidebarRight from './SidebarRight.vue'
+import EditableTitle from './EditableTitle.vue'
 import BgmPlayer from '../bgm/BgmPlayer.vue'
 import PdfExportButton from '../common/PdfExportButton.vue'
 import ShareButton from '../common/ShareButton.vue'
 
 export default defineComponent({
   name: 'RetroLayout',
-  components: { SidebarLeft, SidebarRight, BgmPlayer, PdfExportButton, ShareButton },
+  components: { SidebarLeft, SidebarRight, EditableTitle, BgmPlayer, PdfExportButton, ShareButton },
   props: {
     profile: { type: Object, default: null },
     username: { type: String, required: true },
     isOwner: { type: Boolean, default: false },
-    homeLink: { type: String, required: true },
     skinConfig: { type: Object, default: () => ({}) },
     boardPosts: { type: Array, default: () => [] }
   }
@@ -73,8 +78,7 @@ export default defineComponent({
   border-bottom: 3px solid var(--border);
 }
 
-.retro-header h1 {
-  margin: 0;
+.retro-header .header-title {
   font-size: 1.25rem;
 }
 

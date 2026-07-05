@@ -12,9 +12,8 @@
       :is-owner="true"
       :skin-config="profileStore.skinConfig"
       :board-posts="boardStore.posts"
-      home-link="/"
     >
-      <BoardList editable />
+      <BoardList editable :username="authStore.myUsername" />
     </component>
   </div>
 </template>

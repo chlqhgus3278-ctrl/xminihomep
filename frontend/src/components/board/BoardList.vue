@@ -4,6 +4,10 @@
 
     <SettingsPanel v-if="isSettings && editable" />
 
+    <MainDashboard v-else-if="isMain" :posts="sourcePosts" />
+
+    <GuestbookBoard v-else-if="isGuestbook" :username="username" :editable="editable" />
+
     <BoardEditor
       v-else-if="showEditor"
       :key="activeType"
@@ -34,15 +38,20 @@ import { useBoardStore } from '../../stores/useBoardStore'
 import BoardEditor from './BoardEditor.vue'
 import BoardDetail from './BoardDetail.vue'
 import SettingsPanel from '../settings/SettingsPanel.vue'
+import GuestbookBoard from '../guestbook/GuestbookBoard.vue'
+import MainDashboard from './MainDashboard.vue'
 import { SECTION_LABELS } from '../../utils/resume'
+import { showAlert, showConfirm } from '../../utils/dialog'
 
 export default defineComponent({
   name: 'BoardList',
-  components: { BoardEditor, BoardDetail, SettingsPanel },
+  components: { BoardEditor, BoardDetail, SettingsPanel, GuestbookBoard, MainDashboard },
   props: {
     editable: { type: Boolean, default: false },
     // 지정하면 이 목록을 그대로 쓰고(공개 페이지), 지정 안 하면 내 글 목록을 직접 불러온다(마이페이지).
-    posts: { type: Array, default: null }
+    posts: { type: Array, default: null },
+    // 방명록(GuestbookBoard)이 어느 홈피의 방명록인지 알기 위해 필요하다
+    username: { type: String, default: '' }
   },
   setup() {
     return { boardStore: useBoardStore() }
@@ -59,8 +68,16 @@ export default defineComponent({
     isSettings() {
       return this.activeType === 'SETTINGS'
     },
+    isMain() {
+      return this.activeType === 'MAIN'
+    },
+    isGuestbook() {
+      return this.activeType === 'GUESTBOOK'
+    },
     activeLabel() {
       if (this.isSettings) return '설정'
+      if (this.isMain) return 'Main'
+      if (this.isGuestbook) return '방명록'
       return SECTION_LABELS[this.activeType] || this.activeType
     },
     sourcePosts() {
@@ -74,7 +91,14 @@ export default defineComponent({
   watch: {
     activeType() {
       this.showEditor = false
+    },
+    // 에디터 열림 상태를 스토어에 알려 섹션 이동 시 이탈 확인에 쓴다
+    showEditor(value) {
+      this.boardStore.setEditing(value)
     }
+  },
+  beforeUnmount() {
+    this.boardStore.setEditing(false)
   },
   async created() {
     if (this.posts === null) {
@@ -92,16 +116,19 @@ export default defineComponent({
       this.showEditor = false
     },
     async handleSave(payload) {
-      if (this.currentPost) {
+      const isUpdate = !!this.currentPost
+      if (isUpdate) {
         await this.boardStore.updatePost(this.currentPost.id, payload)
       } else {
         await this.boardStore.createPost(payload)
       }
       this.closeEditor()
+      await showAlert(isUpdate ? '수정되었습니다.' : '저장되었습니다.')
     },
     async handleDelete() {
-      if (!confirm('삭제하시겠습니까?')) return
+      if (!(await showConfirm('삭제하시겠습니까?'))) return
       await this.boardStore.deletePost(this.currentPost.id)
+      await showAlert('삭제되었습니다.')
     }
   }
 })

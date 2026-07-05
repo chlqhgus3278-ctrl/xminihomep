@@ -16,12 +16,14 @@ import { defineComponent } from 'vue'
 import DOMPurify from 'dompurify'
 import { STRUCTURED_TYPES, parseStructured } from '../../utils/resume'
 import CareerHistoryView from './views/CareerHistoryView.vue'
+import IntroView from './views/IntroView.vue'
 import EducationView from './views/EducationView.vue'
 import SkillsView from './views/SkillsView.vue'
 import CertLanguageView from './views/CertLanguageView.vue'
 
 const VIEW_COMPONENTS = {
   CAREER_HISTORY: CareerHistoryView,
+  INTRO: IntroView,
   EDUCATION: EducationView,
   SKILLS: SkillsView,
   CERT: CertLanguageView

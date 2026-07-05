@@ -1,7 +1,14 @@
 <template>
   <aside class="sidebar-right">
     <nav class="menu">
-      <router-link :to="homeLink" class="menu-item">Home</router-link>
+      <button
+        type="button"
+        class="menu-item"
+        :class="{ active: boardStore.activeType === 'MAIN' }"
+        @click="selectSection('MAIN')"
+      >
+        Main
+      </button>
       <button
         v-for="section in sections"
         :key="section.value"
@@ -47,7 +54,6 @@ export default defineComponent({
   components: { VisitorCounter, GuestbookWidget },
   props: {
     isOwner: { type: Boolean, default: false },
-    homeLink: { type: String, required: true },
     username: { type: String, required: true }
   },
   setup() {

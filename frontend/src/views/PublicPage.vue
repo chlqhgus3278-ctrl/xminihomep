@@ -10,9 +10,8 @@
       :is-owner="isOwner"
       :skin-config="profileStore.skinConfig"
       :board-posts="boardPosts"
-      :home-link="`/${$route.params.username}`"
     >
-      <BoardList :posts="boardPosts" :editable="false" />
+      <BoardList :posts="boardPosts" :editable="false" :username="$route.params.username" />
     </component>
   </div>
 </template>

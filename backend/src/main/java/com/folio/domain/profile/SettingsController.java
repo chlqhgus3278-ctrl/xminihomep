@@ -35,6 +35,12 @@ public class SettingsController {
         return ApiResponse.success(settingsService.updateSkin(userId, skinConfig));
     }
 
+    @PutMapping("/layout")
+    public ApiResponse<Map<String, Object>> updateLayout(@AuthenticationPrincipal Long userId,
+                                                           @RequestBody Map<String, Object> body) {
+        return ApiResponse.success(settingsService.updateLayout(userId, body));
+    }
+
     @PutMapping("/visibility")
     public ApiResponse<Map<String, Object>> updateVisibility(@AuthenticationPrincipal Long userId,
                                                                @RequestBody Map<String, Object> body) {
