@@ -5,7 +5,6 @@
         ref="input"
         v-model="draft"
         class="title-input"
-        placeholder="OO의 홈피"
         @keyup.enter="save"
         @keyup.esc="cancel"
       />
@@ -26,7 +25,7 @@
 <script>
 import { defineComponent, nextTick } from 'vue'
 import { useProfileStore } from '../../stores/useProfileStore'
-import { showAlert } from '../../utils/dialog'
+import { showToast } from '../../utils/toast'
 
 export default defineComponent({
   name: 'EditableTitle',
@@ -67,7 +66,9 @@ export default defineComponent({
       try {
         await this.profileStore.updateProfile({ homepageTitle: this.draft.trim() })
         this.isEditing = false
-        await showAlert('수정되었습니다.')
+        showToast('수정되었습니다.')
+      } catch (e) {
+        showToast('수정에 실패했습니다.', 'error')
       } finally {
         this.saving = false
       }

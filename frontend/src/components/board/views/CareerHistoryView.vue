@@ -1,6 +1,6 @@
 <template>
   <div class="resume-view">
-    <div v-if="data.summary" class="career-summary">
+    <div v-if="!dashboard && data.summary" class="career-summary">
       <p class="career-summary-label">커리어 요약</p>
       <p class="career-summary-text">{{ data.summary }}</p>
     </div>
@@ -21,7 +21,7 @@
       <p v-if="entry.jobTitle || entry.department || entry.position" class="view-sub">
         {{ [entry.jobTitle, entry.department, entry.position].filter(Boolean).join(' · ') }}
       </p>
-      <p v-if="entry.duties" class="view-body">{{ entry.duties }}</p>
+      <p v-if="!dashboard && entry.duties" class="view-body">{{ entry.duties }}</p>
       <div v-if="skillsOf(entry).length" class="skill-tags">
         <span v-for="skill in skillsOf(entry)" :key="skill" class="skill-tag">{{ skill }}</span>
       </div>
@@ -41,7 +41,8 @@ import { calcPeriod, formatMonths, formatYm, monthsBetween } from '../../../util
 export default defineComponent({
   name: 'CareerHistoryView',
   props: {
-    data: { type: Object, required: true }
+    data: { type: Object, required: true },
+    dashboard: { type: Boolean, default: false }
   },
   computed: {
     entries() {

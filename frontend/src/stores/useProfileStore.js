@@ -5,13 +5,24 @@ export const useProfileStore = defineStore('profile', {
   state: () => ({
     profile: null,    // HashMap 형태로 그대로 사용
     theme: 'retro',
-    skinConfig: {}
+    skinConfig: {},
+    // 방문 기록(POST /visit)이 끝났음을 알리는 신호. VisitorCounter가 감지해 다시 조회한다.
+    visitVersion: 0
   }),
   getters: {
     currentTheme: (state) => state.theme,
     hasProfile: (state) => !!state.profile
   },
   actions: {
+    // 방문을 기록하고, 성공하면 카운터가 갱신되도록 신호를 보낸다
+    async recordVisit(username) {
+      try {
+        await axios.post(`/api/public/${username}/visit`)
+        this.visitVersion += 1
+      } catch (e) {
+        // 방문 집계 실패는 화면 동작에 영향을 주지 않는다
+      }
+    },
     async fetchPublic(username) {
       const res = await axios.get(`/api/public/${username}`)
       this.profile = res.data.data.profile

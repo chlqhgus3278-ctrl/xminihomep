@@ -3,7 +3,7 @@
     <section v-for="type in sectionTypes" :key="type" class="dash-cell">
       <h3 class="dash-title">{{ labelOf(type) }}</h3>
       <div class="dash-body">
-        <BoardDetail v-if="postOf(type)" :post="postOf(type)" />
+        <BoardDetail v-if="postOf(type)" :post="postOf(type)" dashboard />
         <p v-else class="dash-empty">등록된 {{ labelOf(type) }}이(가) 없습니다.</p>
       </div>
       <button type="button" class="dash-more" @click="goSection(type)">전체 보기 →</button>
@@ -59,7 +59,7 @@ export default defineComponent({
 .main-dashboard {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 16px;
 }
 
 .dash-cell {
@@ -68,16 +68,17 @@ export default defineComponent({
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--surface);
-  padding: 0.9rem;
+  padding: 16px;
   min-height: 180px;
 }
 
 .dash-title {
-  margin: 0 0 0.6rem;
+  margin: 0 0 12px;
   font-size: 0.95rem;
+  font-weight: 600;
   color: var(--primary);
   border-bottom: 1px dashed var(--border);
-  padding-bottom: 0.4rem;
+  padding-bottom: 8px;
 }
 
 .dash-body {

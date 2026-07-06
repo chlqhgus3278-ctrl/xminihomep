@@ -1,10 +1,20 @@
 <template>
   <div class="guestbook-board">
     <!-- 작성 폼 -->
-    <form v-if="authStore.isLoggedIn" class="write-form" @submit.prevent="handleSubmit">
-      <textarea v-model="message" placeholder="방명록을 남겨보세요" rows="2" />
-      <button type="submit" :disabled="!message.trim()">등록</button>
-    </form>
+    <template v-if="authStore.isLoggedIn">
+      <button v-if="!showWriteForm" type="button" class="write-toggle" @click="showWriteForm = true">
+        ✏️ 방명록 작성
+      </button>
+      <Transition name="slide-down">
+        <form v-if="showWriteForm" class="write-form" @submit.prevent="handleSubmit">
+          <textarea v-model="message" placeholder="방명록을 남겨보세요" rows="2" autofocus />
+          <div class="write-form-actions">
+            <button type="button" class="text-btn" @click="showWriteForm = false">취소</button>
+            <button type="submit" :disabled="!message.trim()">등록</button>
+          </div>
+        </form>
+      </Transition>
+    </template>
     <p v-else class="login-hint">
       <router-link to="/login">로그인</router-link> 후 방명록을 남길 수 있습니다.
     </p>
@@ -21,7 +31,8 @@
     </div>
 
     <!-- 방명록 목록 -->
-    <ul class="entries">
+    <div v-if="loading" class="loading-row"><span class="spinner" /> 불러오는 중...</div>
+    <ul v-else class="entries">
       <li v-for="entry in entries" :key="entry.id" class="entry">
         <div class="entry-header">
           <label class="entry-title">
@@ -89,6 +100,7 @@ import axios from 'axios'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useBoardStore } from '../../stores/useBoardStore'
 import { showAlert, showConfirm } from '../../utils/dialog'
+import { formatDateTime } from '../../utils/datetime'
 
 const PAGE_SIZE = 10
 
@@ -110,7 +122,9 @@ export default defineComponent({
       message: '',
       commentDrafts: {},
       expandedIds: [],
-      selectedIds: []
+      selectedIds: [],
+      loading: false,
+      showWriteForm: false
     }
   },
   computed: {
@@ -124,10 +138,15 @@ export default defineComponent({
       handler() {
         this.fetchEntries(0)
       }
+    },
+    // 이 화면의 작성/삭제뿐 아니라 우측 배너에서 글을 남겨도 목록을 갱신한다
+    'boardStore.guestbookVersion'() {
+      this.fetchEntries(this.page)
     }
   },
   methods: {
     async fetchEntries(page) {
+      this.loading = true
       try {
         const res = await axios.get(`/api/public/${this.username}/guestbook`, {
           params: { page, size: PAGE_SIZE }
@@ -139,10 +158,12 @@ export default defineComponent({
       } catch (e) {
         this.entries = []
         this.totalPages = 0
+      } finally {
+        this.loading = false
       }
     },
     formatDate(dateTime) {
-      return dateTime ? dateTime.slice(0, 10).replaceAll('-', '.') : ''
+      return formatDateTime(dateTime)
     },
     canDelete(entry) {
       const myId = this.authStore.user?.id
@@ -168,21 +189,20 @@ export default defineComponent({
       if (!text) return
       await axios.post(`/api/public/${this.username}/guestbook`, { message: text })
       this.message = ''
-      await this.fetchEntries(0)
-      this.notifyChanged()
+      this.showWriteForm = false
+      this.page = 0
+      this.notifyChanged() // guestbookVersion 감시자가 목록을 다시 불러온다
     },
     async handleComment(entry) {
       const text = (this.commentDrafts[entry.id] || '').trim()
       if (!text) return
       await axios.post(`/api/public/${this.username}/guestbook/${entry.id}/comments`, { message: text })
       this.commentDrafts[entry.id] = ''
-      await this.fetchEntries(this.page)
       this.notifyChanged()
     },
     async handleDelete(entry) {
       if (!(await showConfirm('삭제하시겠습니까?'))) return
       await axios.delete(`/api/guestbook/${entry.id}`)
-      await this.fetchEntries(this.page)
       this.notifyChanged()
       await showAlert('삭제되었습니다.')
     },
@@ -190,7 +210,7 @@ export default defineComponent({
       if (this.selectedIds.length === 0) return
       if (!(await showConfirm(`선택한 방명록 ${this.selectedIds.length}개를 삭제하시겠습니까?`))) return
       await axios.post('/api/guestbook/bulk-delete', { ids: this.selectedIds })
-      await this.fetchEntries(0)
+      this.page = 0
       this.notifyChanged()
       await showAlert('삭제되었습니다.')
     }
@@ -205,10 +225,16 @@ export default defineComponent({
   gap: 0.75rem;
 }
 
+.write-toggle {
+  align-self: flex-start;
+  font-size: 0.85rem;
+}
+
 .write-form {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
+  overflow: hidden;
 }
 
 .write-form textarea {
@@ -220,10 +246,27 @@ export default defineComponent({
   border-radius: 4px;
 }
 
-.write-form button {
-  align-self: flex-end;
+.write-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.4rem;
+}
+
+.write-form-actions button {
   font-size: 0.8rem;
   padding: 0.35rem 0.9rem;
+}
+
+.slide-down-enter-active,
+.slide-down-leave-active {
+  transition: max-height 0.2s ease, opacity 0.2s ease;
+  max-height: 160px;
+}
+
+.slide-down-enter-from,
+.slide-down-leave-to {
+  max-height: 0;
+  opacity: 0;
 }
 
 .login-hint {
@@ -357,6 +400,15 @@ export default defineComponent({
 .empty {
   padding: 1rem 0;
   color: var(--text-muted);
+}
+
+.loading-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 1rem 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
 }
 
 .pagination {

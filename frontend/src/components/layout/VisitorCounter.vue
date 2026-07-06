@@ -17,11 +17,15 @@
 <script>
 import { defineComponent } from 'vue'
 import axios from 'axios'
+import { useProfileStore } from '../../stores/useProfileStore'
 
 export default defineComponent({
   name: 'VisitorCounter',
   props: {
     username: { type: String, required: true }
+  },
+  setup() {
+    return { profileStore: useProfileStore() }
   },
   data() {
     return {
@@ -35,6 +39,10 @@ export default defineComponent({
       handler() {
         this.fetchCount()
       }
+    },
+    // 방문 기록(POST /visit)이 끝나면 최신 카운트로 다시 조회한다
+    'profileStore.visitVersion'() {
+      this.fetchCount()
     }
   },
   methods: {

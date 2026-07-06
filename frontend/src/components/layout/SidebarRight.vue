@@ -92,6 +92,7 @@ export default defineComponent({
   text-align: center;
   cursor: pointer;
   box-sizing: border-box;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
 .menu-item:hover {
@@ -112,5 +113,30 @@ export default defineComponent({
 
 .sidebar-right > .menu-divider {
   margin: 1rem 0;
+}
+
+@media (max-width: 768px) {
+  .sidebar-right {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+  }
+
+  .menu {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 0.3rem;
+  }
+
+  .menu-item {
+    flex: 1 0 auto;
+    white-space: nowrap;
+  }
+
+  .sidebar-right > .menu-divider,
+  .visitor-counter,
+  .guestbook-widget {
+    display: none;
+  }
 }
 </style>

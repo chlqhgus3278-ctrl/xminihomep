@@ -70,8 +70,8 @@ export default defineComponent({
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 1.5rem 2rem;
+  gap: 16px;
+  padding: 24px 32px;
   border-bottom: 1px solid var(--border);
   background: var(--surface);
 }
@@ -106,20 +106,51 @@ export default defineComponent({
 .modern-body {
   display: grid;
   grid-template-columns: 240px 1fr 220px;
-  gap: 1rem;
-  padding: 1.5rem;
+  gap: 16px;
+  padding: 24px;
 }
 
 .modern-col {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 1.25rem;
+  padding: 24px;
   min-height: 70vh;
 }
 
 .modern-col--main {
   background: var(--surface2);
   box-shadow: 0 0 24px var(--primary-glow, transparent);
+}
+
+@media (max-width: 768px) {
+  .modern-header {
+    padding: 16px;
+    flex-wrap: wrap;
+  }
+
+  .modern-body {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+
+  .modern-col {
+    min-height: auto;
+  }
+
+  .modern-col--left {
+    order: 1;
+  }
+
+  .modern-col--main {
+    order: 3;
+  }
+
+  .modern-col--right {
+    order: 2;
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+  }
 }
 </style>

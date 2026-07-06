@@ -68,7 +68,8 @@ export default defineComponent({
         this.profileStore.theme = this.profileStore.profile.theme || 'retro'
         this.profileStore.skinConfig = this.profileStore.profile.skinConfig || {}
         this.boardPosts = res.data.data.boardPosts
-        axios.post(`/api/public/${this.$route.params.username}/visit`).catch(() => {})
+        // 기록 완료 후 visitVersion이 올라가면 VisitorCounter가 갱신된 수치를 다시 읽는다
+        this.profileStore.recordVisit(this.$route.params.username)
       } catch (e) {
         this.notFound = true
       }

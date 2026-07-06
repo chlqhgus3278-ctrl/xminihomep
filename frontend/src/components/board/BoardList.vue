@@ -2,33 +2,36 @@
   <div class="board-list">
     <h2 class="section-title">{{ activeLabel }}</h2>
 
-    <SettingsPanel v-if="isSettings && editable" />
+    <Transition name="fade" mode="out-in">
+      <div :key="activeType">
+        <SettingsPanel v-if="isSettings && editable" />
 
-    <MainDashboard v-else-if="isMain" :posts="sourcePosts" />
+        <MainDashboard v-else-if="isMain" :posts="sourcePosts" />
 
-    <GuestbookBoard v-else-if="isGuestbook" :username="username" :editable="editable" />
+        <GuestbookBoard v-else-if="isGuestbook" :username="username" :editable="editable" />
 
-    <BoardEditor
-      v-else-if="showEditor"
-      :key="activeType"
-      :board-type="activeType"
-      :post="currentPost"
-      @save="handleSave"
-      @cancel="closeEditor"
-    />
+        <BoardEditor
+          v-else-if="showEditor"
+          :board-type="activeType"
+          :post="currentPost"
+          @save="handleSave"
+          @cancel="closeEditor"
+        />
 
-    <template v-else-if="currentPost">
-      <div v-if="editable" class="owner-actions">
-        <button type="button" @click="startEdit">수정하기</button>
-        <button type="button" @click="handleDelete">삭제</button>
+        <template v-else-if="currentPost">
+          <div v-if="editable" class="owner-actions">
+            <button type="button" @click="startEdit">수정하기</button>
+            <button type="button" @click="handleDelete">삭제</button>
+          </div>
+          <BoardDetail :post="currentPost" />
+        </template>
+
+        <template v-else>
+          <p class="empty">등록된 {{ activeLabel }}이 없습니다.</p>
+          <button v-if="editable" type="button" class="register-button" @click="startCreate">등록하기</button>
+        </template>
       </div>
-      <BoardDetail :post="currentPost" />
-    </template>
-
-    <template v-else>
-      <p class="empty">등록된 {{ activeLabel }}이 없습니다.</p>
-      <button v-if="editable" type="button" class="register-button" @click="startCreate">등록하기</button>
-    </template>
+    </Transition>
   </div>
 </template>
 
@@ -42,6 +45,7 @@ import GuestbookBoard from '../guestbook/GuestbookBoard.vue'
 import MainDashboard from './MainDashboard.vue'
 import { SECTION_LABELS } from '../../utils/resume'
 import { showAlert, showConfirm } from '../../utils/dialog'
+import { showToast } from '../../utils/toast'
 
 export default defineComponent({
   name: 'BoardList',
@@ -58,7 +62,8 @@ export default defineComponent({
   },
   data() {
     return {
-      showEditor: false
+      showEditor: false,
+      syncingRoute: false
     }
   },
   computed: {
@@ -89,8 +94,15 @@ export default defineComponent({
     }
   },
   watch: {
-    activeType() {
+    activeType(type) {
       this.showEditor = false
+      this.syncRouteFromActive(type)
+    },
+    '$route.query.section': {
+      immediate: true,
+      handler(section) {
+        this.syncActiveFromRoute(section)
+      }
     },
     // 에디터 열림 상태를 스토어에 알려 섹션 이동 시 이탈 확인에 쓴다
     showEditor(value) {
@@ -106,6 +118,42 @@ export default defineComponent({
     }
   },
   methods: {
+    isValidMenuType(type) {
+      return ['MAIN', 'SETTINGS', 'GUESTBOOK', ...Object.keys(SECTION_LABELS)].includes(type)
+    },
+    normalizeSection(section) {
+      const type = Array.isArray(section) ? section[0] : section
+      return this.isValidMenuType(type) ? type : 'MAIN'
+    },
+    async syncActiveFromRoute(section) {
+      const nextType = this.normalizeSection(section)
+      if (nextType === this.activeType) return
+
+      this.syncingRoute = true
+      await this.boardStore.setActiveType(nextType)
+      this.syncingRoute = false
+
+      if (this.activeType !== nextType) {
+        this.syncRouteFromActive(this.activeType, true)
+      }
+    },
+    syncRouteFromActive(type, replace = false) {
+      if (this.syncingRoute) return
+
+      const query = { ...this.$route.query }
+      if (type === 'MAIN') {
+        delete query.section
+      } else {
+        query.section = type
+      }
+
+      const currentSection = this.$route.query.section
+      const nextSection = query.section
+      if (currentSection === nextSection || (!currentSection && !nextSection)) return
+
+      const navigate = replace ? this.$router.replace : this.$router.push
+      navigate.call(this.$router, { path: this.$route.path, query, hash: this.$route.hash }).catch(() => {})
+    },
     startCreate() {
       this.showEditor = true
     },
@@ -117,13 +165,18 @@ export default defineComponent({
     },
     async handleSave(payload) {
       const isUpdate = !!this.currentPost
-      if (isUpdate) {
-        await this.boardStore.updatePost(this.currentPost.id, payload)
-      } else {
-        await this.boardStore.createPost(payload)
+      try {
+        if (isUpdate) {
+          await this.boardStore.updatePost(this.currentPost.id, payload)
+        } else {
+          await this.boardStore.createPost(payload)
+        }
+        this.closeEditor()
+        showToast(isUpdate ? '수정되었습니다.' : '저장되었습니다.')
+      } catch (e) {
+        showToast('저장에 실패했습니다.', 'error')
+        throw e
       }
-      this.closeEditor()
-      await showAlert(isUpdate ? '수정되었습니다.' : '저장되었습니다.')
     },
     async handleDelete() {
       if (!(await showConfirm('삭제하시겠습니까?'))) return
@@ -136,18 +189,19 @@ export default defineComponent({
 
 <style scoped>
 .section-title {
-  margin: 0 0 1rem;
-  font-size: 1.1rem;
+  margin: 0 0 16px;
+  font-size: 1.25rem;
+  font-weight: 700;
   color: var(--text);
   border-bottom: 2px solid var(--primary);
-  padding-bottom: 0.4rem;
+  padding-bottom: 8px;
 }
 
 .owner-actions {
   display: flex;
   justify-content: flex-end;
   gap: 0.4rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 16px;
 }
 
 .owner-actions button {
@@ -162,5 +216,15 @@ export default defineComponent({
 
 .register-button {
   font-size: 0.85rem;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.15s;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

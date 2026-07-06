@@ -2,7 +2,7 @@
   <aside class="sidebar-left">
     <div class="profile-photo" :class="{ editable: isEditing }" @click="isEditing && openFilePicker()">
       <img v-if="profile?.profileImgUrl" :src="profile.profileImgUrl" alt="프로필 사진" />
-      <div v-else class="profile-photo-placeholder">📷</div>
+      <div v-else class="profile-photo-placeholder">{{ initials }}</div>
       <div v-if="isEditing" class="photo-overlay">사진 변경</div>
     </div>
     <input ref="fileInput" type="file" accept="image/*" class="hidden-input" @change="handlePhotoChange" />
@@ -44,7 +44,7 @@
         </label>
         <label class="form-row">
           <span class="form-label">연락처</span>
-          <input v-model="form.phone" placeholder="연락처" />
+          <input v-model="form.phone" type="tel" placeholder="연락처" />
         </label>
         <label class="form-row form-row--top">
           <span class="form-label">소개 <em class="required-mark">*</em></span>
@@ -85,6 +85,7 @@ import { defineComponent } from 'vue'
 import { useProfileStore } from '../../stores/useProfileStore'
 import { parseStructured } from '../../utils/resume'
 import { showAlert } from '../../utils/dialog'
+import { showToast } from '../../utils/toast'
 import SkillsEditModal from '../skills/SkillsEditModal.vue'
 
 export default defineComponent({
@@ -106,6 +107,10 @@ export default defineComponent({
     },
     skillTags() {
       return parseStructured(this.skillsPost?.content)?.tags || []
+    },
+    initials() {
+      const name = this.profile?.displayName || this.username || '?'
+      return name.slice(0, 2)
     }
   },
   data() {
@@ -135,22 +140,46 @@ export default defineComponent({
       this.isEditing = false
     },
     async handleSave() {
-      if (!this.form.displayName.trim()) {
+      const payload = {
+        displayName: this.form.displayName.trim(),
+        location: this.form.location.trim(),
+        emailPublic: this.form.emailPublic.trim(),
+        phone: this.form.phone.trim(),
+        intro: this.form.intro.trim()
+      }
+
+      if (!payload.displayName) {
         await showAlert('이름을 입력해 주세요.')
         return
       }
-      if (!this.form.intro.trim()) {
+      if (payload.emailPublic && !this.isValidEmail(payload.emailPublic)) {
+        await showAlert('이메일 형식을 확인해 주세요.')
+        return
+      }
+      if (payload.phone && !this.isValidPhone(payload.phone)) {
+        await showAlert('연락처 형식을 확인해 주세요.')
+        return
+      }
+      if (!payload.intro) {
         await showAlert('소개를 입력해 주세요.')
         return
       }
       this.saving = true
       try {
-        await this.profileStore.updateProfile({ ...this.form })
+        await this.profileStore.updateProfile(payload)
         this.isEditing = false
-        await showAlert('저장되었습니다.')
+        showToast('저장되었습니다.')
+      } catch (e) {
+        showToast('저장에 실패했습니다.', 'error')
       } finally {
         this.saving = false
       }
+    },
+    isValidEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+    },
+    isValidPhone(phone) {
+      return /^(01[016789]-?\d{3,4}-?\d{4}|0\d{1,2}-?\d{3,4}-?\d{4}|1[568]\d{2}-?\d{4})$/.test(phone)
     },
     openFilePicker() {
       this.$refs.fileInput.click()
@@ -211,8 +240,15 @@ export default defineComponent({
 }
 
 .profile-photo-placeholder {
-  font-size: 2rem;
-  opacity: 0.4;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary), var(--text-muted));
 }
 
 .photo-overlay {
