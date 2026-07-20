@@ -75,52 +75,27 @@
 
     <template v-else>
       <section>
-        <h3>게시판 목록</h3>
-        <p class="layout-hint">아래 게시판을 메인 화면 영역으로 끌어와 배치하세요.</p>
-        <div
-          class="board-palette"
-          @dragover.prevent
-          @drop.prevent="dropToPalette"
-        >
-          <div
-            v-for="section in availableSections"
-            :key="section.value"
-            class="board-chip"
-            draggable="true"
-            @dragstart="startDrag('palette', section.value)"
-            @dragend="endDrag"
-          >
-            {{ section.label }}
-          </div>
-          <p v-if="availableSections.length === 0" class="palette-empty">모든 게시판이 배치되었습니다.</p>
-        </div>
-      </section>
-
-      <section>
-        <h3>메인 화면 배치</h3>
-        <div
-          class="layout-canvas"
-          :class="{ 'drop-ready': !!drag }"
-          @dragover.prevent
-          @drop.prevent="dropToCanvas()"
-        >
-          <div
-            v-for="(type, index) in placedSections"
+        <h3>메인 화면 순서</h3>
+        <p class="layout-hint">
+          메인 화면에는 모든 게시판의 내용이 아래 순서대로 표시됩니다. ≡ 를 잡고 끌어서 순서를 바꿔 보세요.
+        </p>
+        <ul class="order-list">
+          <li
+            v-for="(type, index) in orderedSections"
             :key="type"
-            class="placed-cell"
+            class="order-item"
+            :class="{ dragging: dragIndex === index }"
             draggable="true"
-            @dragstart="startDrag('canvas', type, index)"
-            @dragend="endDrag"
-            @dragover.prevent
-            @drop.prevent.stop="dropToCanvas(index)"
+            @dragstart="onDragStart($event, index)"
+            @dragover.prevent="onDragOver(index)"
+            @drop.prevent
+            @dragend="onDragEnd"
           >
-            <span class="placed-label">{{ labelOf(type) }}</span>
-            <button type="button" class="remove-button" title="배치 해제" @click="removeSection(index)">✕</button>
-          </div>
-          <p v-if="placedSections.length === 0" class="canvas-empty">
-            여기로 게시판을 끌어다 놓으세요.
-          </p>
-        </div>
+            <span class="drag-handle" aria-hidden="true">≡</span>
+            <span class="order-number">{{ index + 1 }}</span>
+            <span class="order-label">{{ labelOf(type) }}</span>
+          </li>
+        </ul>
         <button type="button" class="layout-reset" @click="resetLayout">기본값으로</button>
       </section>
 
@@ -137,7 +112,7 @@
 import { defineComponent } from 'vue'
 import axios from 'axios'
 import { useProfileStore } from '../../stores/useProfileStore'
-import { MAIN_SECTION_CHOICES, DEFAULT_MAIN_SECTIONS, SECTION_LABELS } from '../../utils/resume'
+import { DEFAULT_MAIN_SECTIONS, SECTION_LABELS, normalizeMainSections } from '../../utils/resume'
 import { showAlert } from '../../utils/dialog'
 
 export default defineComponent({
@@ -153,18 +128,12 @@ export default defineComponent({
       selectedTheme: 'retro',
       skinPrimary: '#3a86c0',
       skinBg: '#b8cfe8',
-      // 메인에 배치된 게시판 순서
-      placedSections: [...DEFAULT_MAIN_SECTIONS],
-      // 진행 중인 드래그 정보 { from: 'palette' | 'canvas', value, index }
-      drag: null,
+      // 메인 화면에 표시될 게시판 순서 (모든 게시판이 항상 포함된다)
+      orderedSections: normalizeMainSections(DEFAULT_MAIN_SECTIONS),
+      // 드래그 중인 항목의 현재 인덱스 (드래그 없으면 null)
+      dragIndex: null,
       isSavingDesign: false,
       isSavingLayout: false
-    }
-  },
-  computed: {
-    // 아직 배치되지 않은 게시판만 목록에 노출
-    availableSections() {
-      return MAIN_SECTION_CHOICES.filter((s) => !this.placedSections.includes(s.value))
     }
   },
   async created() {
@@ -175,11 +144,7 @@ export default defineComponent({
     if (settings.skinConfig?.['--bg']) this.skinBg = settings.skinConfig['--bg']
     this.profileStore.skinConfig = settings.skinConfig || {}
 
-    // 과거 저장분의 폐지된 섹션(예: CAREER_DESC)은 걸러낸다
-    const savedSections = (settings.layoutConfig?.sections || []).filter((type) => SECTION_LABELS[type])
-    if (savedSections.length > 0) {
-      this.placedSections = savedSections
-    }
+    this.orderedSections = normalizeMainSections(settings.layoutConfig?.sections)
 
     if (!this.profileStore.hasProfile) {
       await this.profileStore.fetchMine()
@@ -189,40 +154,26 @@ export default defineComponent({
     labelOf(type) {
       return SECTION_LABELS[type] || type
     },
-    startDrag(from, value, index = null) {
-      this.drag = { from, value, index }
+    onDragStart(event, index) {
+      // Firefox는 setData를 호출해야 드래그가 시작된다
+      event.dataTransfer.setData('text/plain', '')
+      event.dataTransfer.effectAllowed = 'move'
+      this.dragIndex = index
     },
-    endDrag() {
-      this.drag = null
+    /** 드래그 중인 항목이 다른 항목 위를 지나면 그 자리로 실시간 이동 */
+    onDragOver(index) {
+      if (this.dragIndex === null || this.dragIndex === index) return
+      const next = [...this.orderedSections]
+      const [moved] = next.splice(this.dragIndex, 1)
+      next.splice(index, 0, moved)
+      this.orderedSections = next
+      this.dragIndex = index
     },
-    /** 목록/배치 영역에서 끌어온 게시판을 targetIndex 위치(없으면 맨 뒤)에 놓는다 */
-    dropToCanvas(targetIndex = null) {
-      if (!this.drag) return
-      const { from, value } = this.drag
-      const next = this.placedSections.filter((v) => v !== value)
-      if (from === 'palette' && this.placedSections.includes(value)) {
-        this.drag = null
-        return
-      }
-      const insertAt = targetIndex === null ? next.length : Math.min(targetIndex, next.length)
-      next.splice(insertAt, 0, value)
-      this.placedSections = next
-      this.drag = null
-    },
-    /** 배치된 게시판을 목록 영역에 놓으면 배치 해제 */
-    dropToPalette() {
-      if (!this.drag || this.drag.from !== 'canvas') {
-        this.drag = null
-        return
-      }
-      this.placedSections = this.placedSections.filter((v) => v !== this.drag.value)
-      this.drag = null
-    },
-    removeSection(index) {
-      this.placedSections.splice(index, 1)
+    onDragEnd() {
+      this.dragIndex = null
     },
     resetLayout() {
-      this.placedSections = [...DEFAULT_MAIN_SECTIONS]
+      this.orderedSections = normalizeMainSections(DEFAULT_MAIN_SECTIONS)
     },
     resetSkin() {
       this.skinPrimary = '#3a86c0'
@@ -241,7 +192,7 @@ export default defineComponent({
     async saveLayout() {
       this.isSavingLayout = true
       try {
-        await this.profileStore.updateLayout([...this.placedSections])
+        await this.profileStore.updateLayout([...this.orderedSections])
         await showAlert('저장되었습니다.')
       } finally {
         this.isSavingLayout = false
@@ -350,19 +301,21 @@ section h3 {
   color: var(--text-muted);
 }
 
-.board-palette {
+.order-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 0.5rem;
-  min-height: 52px;
-  padding: 0.6rem;
-  border: 1px dashed var(--border);
-  border-radius: 8px;
-  background: var(--surface);
+  max-width: 360px;
 }
 
-.board-chip {
-  padding: 0.45rem 0.8rem;
+.order-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.8rem;
   border: 1px solid var(--border);
   border-radius: 6px;
   background: var(--surface2, var(--surface));
@@ -371,72 +324,42 @@ section h3 {
   user-select: none;
 }
 
-.board-chip:active {
+.order-item:active {
   cursor: grabbing;
 }
 
-.palette-empty,
-.canvas-empty {
-  margin: 0.3rem;
-  font-size: 0.82rem;
-  color: var(--text-muted);
-}
-
-.layout-canvas {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.6rem;
-  min-height: 120px;
-  padding: 0.75rem;
-  border: 2px dashed var(--border);
-  border-radius: 8px;
-  background: var(--surface);
-}
-
-.layout-canvas.drop-ready {
+.order-item.dragging {
+  opacity: 0.5;
+  border-style: dashed;
   border-color: var(--primary);
 }
 
-.layout-canvas .canvas-empty {
-  grid-column: 1 / -1;
-  align-self: center;
-  text-align: center;
+.drag-handle {
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  flex-shrink: 0;
 }
 
-.placed-cell {
-  display: flex;
+.order-number {
+  width: 1.4rem;
+  height: 1.4rem;
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0.7rem 0.8rem;
-  border: 1px solid var(--primary);
-  border-radius: 6px;
-  background: var(--surface2, var(--surface));
-  font-size: 0.85rem;
-  cursor: grab;
-  user-select: none;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  flex-shrink: 0;
 }
 
-.placed-cell:active {
-  cursor: grabbing;
-}
-
-.placed-label {
+.order-label {
+  flex: 1;
   font-weight: 600;
 }
 
-.remove-button {
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  font-size: 0.8rem;
-  cursor: pointer;
-  padding: 0.1rem 0.3rem;
-}
-
-.remove-button:hover {
-  color: var(--primary);
-}
 
 .layout-reset {
   margin-top: 0.75rem;

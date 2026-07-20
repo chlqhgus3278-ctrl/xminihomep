@@ -1,7 +1,7 @@
 <template>
   <article class="board-detail">
     <!-- 구조화 게시판은 전용 뷰로 렌더링 -->
-    <component v-if="structuredView && structuredData" :is="structuredView" :data="structuredData" :dashboard="dashboard" />
+    <component v-if="structuredView && structuredData" :is="structuredView" :data="structuredData" />
 
     <!-- 일반 게시판(경력기술서/자기소개서)은 Quill HTML 렌더링 -->
     <template v-else>
@@ -32,8 +32,7 @@ const VIEW_COMPONENTS = {
 export default defineComponent({
   name: 'BoardDetail',
   props: {
-    post: { type: Object, required: true },
-    dashboard: { type: Boolean, default: false }
+    post: { type: Object, required: true }
   },
   computed: {
     structuredView() {

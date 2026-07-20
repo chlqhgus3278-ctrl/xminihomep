@@ -67,6 +67,11 @@ public class Profile {
     @Column(columnDefinition = "TEXT")
     private String intro;
 
+    /** 이름 옆에 표시하는 직군 라벨(예: Dev, Backend Dev). 목록 선택 또는 직접 입력. */
+    @Builder.Default
+    @Column(length = 40)
+    private String job = "Dev";
+
     @Builder.Default
     @Column(length = 20)
     private String theme = "retro";

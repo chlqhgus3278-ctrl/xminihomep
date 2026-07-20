@@ -53,7 +53,15 @@
       </form>
 
       <template v-else>
-        <p class="display-name">{{ profile?.displayName || username }}</p>
+        <div class="name-row">
+          <span class="display-name">{{ profile?.displayName || username }}</span>
+          <span
+            class="job-badge"
+            :class="{ clickable: isOwner }"
+            :title="isOwner ? '직업 변경' : null"
+            @click="onJobBadgeClick"
+          >{{ jobLabel }}</span>
+        </div>
         <p v-if="profile?.location" class="info-row">📍 {{ profile.location }}</p>
         <p v-if="profile?.emailPublic" class="info-row">✉️ {{ profile.emailPublic }}</p>
         <p v-if="profile?.phone" class="info-row">📞 {{ profile.phone }}</p>
@@ -77,6 +85,12 @@
     </div>
 
     <SkillsEditModal v-if="showSkillsModal" :post="skillsPost" @close="showSkillsModal = false" />
+    <JobPickerModal
+      v-if="showJobModal"
+      :current="jobLabel"
+      @select="selectJob"
+      @close="showJobModal = false"
+    />
   </aside>
 </template>
 
@@ -84,13 +98,15 @@
 import { defineComponent } from 'vue'
 import { useProfileStore } from '../../stores/useProfileStore'
 import { parseStructured } from '../../utils/resume'
+import { DEFAULT_JOB } from '../../utils/jobs'
 import { showAlert } from '../../utils/dialog'
 import { showToast } from '../../utils/toast'
 import SkillsEditModal from '../skills/SkillsEditModal.vue'
+import JobPickerModal from './JobPickerModal.vue'
 
 export default defineComponent({
   name: 'SidebarLeft',
-  components: { SkillsEditModal },
+  components: { SkillsEditModal, JobPickerModal },
   props: {
     profile: { type: Object, default: null },
     username: { type: String, required: true },
@@ -111,12 +127,16 @@ export default defineComponent({
     initials() {
       const name = this.profile?.displayName || this.username || '?'
       return name.slice(0, 2)
+    },
+    jobLabel() {
+      return this.profile?.job || DEFAULT_JOB
     }
   },
   data() {
     return {
       isEditing: false,
       showSkillsModal: false,
+      showJobModal: false,
       saving: false,
       form: {
         displayName: '',
@@ -180,6 +200,19 @@ export default defineComponent({
     },
     isValidPhone(phone) {
       return /^(01[016789]-?\d{3,4}-?\d{4}|0\d{1,2}-?\d{3,4}-?\d{4}|1[568]\d{2}-?\d{4})$/.test(phone)
+    },
+    onJobBadgeClick() {
+      if (this.isOwner) this.showJobModal = true
+    },
+    async selectJob(job) {
+      this.showJobModal = false
+      if (job === this.jobLabel) return
+      try {
+        await this.profileStore.updateProfile({ job })
+        showToast('저장되었습니다.')
+      } catch (e) {
+        showToast('저장에 실패했습니다.', 'error')
+      }
     },
     openFilePicker() {
       this.$refs.fileInput.click()
@@ -303,10 +336,38 @@ export default defineComponent({
   cursor: default;
 }
 
+.name-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 0.5rem;
+}
+
 .display-name {
   font-weight: 700;
   font-size: 1rem;
-  margin: 0 0 0.5rem;
+}
+
+.job-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.6rem;
+  border-radius: 12px;
+  border: 1px solid var(--text-muted, #999);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  background: var(--surface2, transparent);
+}
+
+.job-badge.clickable {
+  cursor: pointer;
+}
+
+.job-badge.clickable:hover {
+  border-color: var(--primary);
+  color: var(--primary);
 }
 
 .info-row {

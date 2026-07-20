@@ -1,6 +1,6 @@
 <template>
   <div class="resume-view">
-    <div v-if="!dashboard && data.summary" class="career-summary">
+    <div v-if="data.summary" class="career-summary">
       <p class="career-summary-label">커리어 요약</p>
       <p class="career-summary-text">{{ data.summary }}</p>
     </div>
@@ -21,10 +21,10 @@
       <p v-if="entry.jobTitle || entry.department || entry.position" class="view-sub">
         {{ [entry.jobTitle, entry.department, entry.position].filter(Boolean).join(' · ') }}
       </p>
-      <p v-if="!dashboard && entry.duties" class="view-body">{{ entry.duties }}</p>
       <div v-if="skillsOf(entry).length" class="skill-tags">
         <span v-for="skill in skillsOf(entry)" :key="skill" class="skill-tag">{{ skill }}</span>
       </div>
+      <p v-if="entry.duties" class="view-body">{{ entry.duties }}</p>
       <p v-if="entry.salary || entry.location || entry.leaveReason" class="view-optional">
         <span v-if="entry.salary">연봉 {{ displaySalary(entry.salary) }}</span>
         <span v-if="entry.location">근무지역 {{ entry.location }}</span>
@@ -41,8 +41,7 @@ import { calcPeriod, formatMonths, formatYm, monthsBetween } from '../../../util
 export default defineComponent({
   name: 'CareerHistoryView',
   props: {
-    data: { type: Object, required: true },
-    dashboard: { type: Boolean, default: false }
+    data: { type: Object, required: true }
   },
   computed: {
     entries() {
@@ -65,10 +64,11 @@ export default defineComponent({
       return calcPeriod(entry.startYm, entry.current ? null : entry.endYm)
     },
     skillsOf(entry) {
-      return (entry.skills || '')
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean)
+      // 신규 저장분은 배열, 기존 저장분은 쉼표로 구분된 문자열일 수 있다.
+      const skills = Array.isArray(entry.skills)
+        ? entry.skills
+        : (entry.skills || '').split(',')
+      return skills.map((s) => (s || '').trim()).filter(Boolean)
     },
     // 예전 저장분은 '4,000만원'처럼 단위까지 입력되어 있을 수 있어 중복을 피한다
     displaySalary(salary) {

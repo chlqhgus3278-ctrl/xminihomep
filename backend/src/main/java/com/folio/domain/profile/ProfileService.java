@@ -52,6 +52,9 @@ public class ProfileService {
         if (updates.containsKey("intro")) {
             profile.setIntro((String) updates.get("intro"));
         }
+        if (updates.containsKey("job")) {
+            profile.setJob((String) updates.get("job"));
+        }
 
         return profile;
     }

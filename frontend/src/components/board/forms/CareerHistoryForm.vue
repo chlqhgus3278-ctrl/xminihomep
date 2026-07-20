@@ -68,6 +68,8 @@
         </div>
       </div>
 
+      <SkillTagInput :tags="entry.skills" label="사용 기술" placeholder="예: Java, Spring Boot, MySQL" />
+
       <div class="field">
         <label>
           담당업무
@@ -78,11 +80,6 @@
           rows="4"
           placeholder="담당했던 업무와 성과를 입력하세요"
         />
-      </div>
-
-      <div class="field">
-        <label>사용 기술</label>
-        <input v-model="entry.skills" placeholder="예: Java, Spring Boot, MySQL (쉼표로 구분)" />
       </div>
 
       <details
@@ -119,6 +116,7 @@
 import { defineComponent } from 'vue'
 import { calcBytes, calcPeriod, formatMonths, monthsBetween } from '../../../utils/resume'
 import { showAlert } from '../../../utils/dialog'
+import SkillTagInput from './SkillTagInput.vue'
 
 function emptyEntry() {
   return {
@@ -131,7 +129,7 @@ function emptyEntry() {
     department: '',
     position: '',
     duties: '',
-    skills: '',
+    skills: [],
     salary: '',
     location: '',
     leaveReason: ''
@@ -140,6 +138,7 @@ function emptyEntry() {
 
 export default defineComponent({
   name: 'CareerHistoryForm',
+  components: { SkillTagInput },
   props: {
     modelValue: { type: Object, required: true }
   },
@@ -168,9 +167,14 @@ export default defineComponent({
     if (this.modelValue.entries.length === 0) {
       this.modelValue.entries.push(emptyEntry())
     }
-    // 기존 저장분에는 skills 필드가 없을 수 있다
+    // skills를 태그 배열로 정규화한다.
+    // 기존 저장분은 없거나(''), '쉼표로 구분된 문자열'일 수 있다.
     this.modelValue.entries.forEach((entry) => {
-      if (typeof entry.skills !== 'string') entry.skills = ''
+      if (Array.isArray(entry.skills)) return
+      entry.skills =
+        typeof entry.skills === 'string'
+          ? entry.skills.split(',').map((s) => s.trim()).filter(Boolean)
+          : []
     })
     // 선택 입력에 이미 값이 있으면 토글을 열린 상태로 시작한다
     this.optionalOpen = this.modelValue.entries.map(

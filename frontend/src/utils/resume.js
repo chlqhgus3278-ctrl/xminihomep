@@ -22,8 +22,17 @@ export const MENU_SECTIONS = SECTIONS.filter((s) => s.value !== 'SKILLS')
 /** 메인 대시보드 구획에 넣을 수 있는 섹션 */
 export const MAIN_SECTION_CHOICES = MENU_SECTIONS
 
-/** 메인 대시보드 기본 4구획 */
+/** 메인 대시보드 기본 순서 */
 export const DEFAULT_MAIN_SECTIONS = ['CAREER_HISTORY', 'INTRO', 'EDUCATION', 'CERT']
+
+/** 저장된 메인 순서 정규화: 폐지된 섹션은 걸러내고, 빠진 섹션은 기본 순서대로 뒤에 붙인다.
+ *  메인 화면은 항상 모든 게시판을 노출하고 순서만 바꿀 수 있다. */
+export function normalizeMainSections(saved) {
+  const choices = MAIN_SECTION_CHOICES.map((s) => s.value)
+  const valid = (Array.isArray(saved) ? saved : []).filter((type) => choices.includes(type))
+  const missing = choices.filter((type) => !valid.includes(type))
+  return [...valid, ...missing]
+}
 
 /** 사람인/잡코리아 방식 byte 계산: 한글 등 non-ASCII 2byte, 영문/숫자/공백 1byte */
 export function calcBytes(text) {
