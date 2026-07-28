@@ -1,4 +1,4 @@
-# folio
+# xminihomep (extra-mini homepage)
 
 싸이월드 미니홈피 스타일의 개발자/직장인 포트폴리오 SaaS.
 Google 로그인 후 `https://도메인/{username}` 형태의 개인 포트폴리오 홈피를 만들 수 있다.
@@ -29,7 +29,7 @@ Google 로그인 후 `https://도메인/{username}` 형태의 개인 포트폴�
 ## 프로젝트 구조
 
 ```
-folio/
+xminihomep/
 ├── backend/   # Spring Boot 3 (Java 17, Maven)
 └── frontend/  # Vue 3 + Vite
 ```
@@ -89,7 +89,7 @@ Flyway가 기동 시 `backend/src/main/resources/db/migration`의 마이그레�
 
 Render 대시보드에서 **New > Blueprint**로 이 저장소를 연결하면 `render.yaml`대로 서비스가 생성된다.
 `JWT_SECRET`은 자동 생성되고, 나머지(`sync: false`)는 대시보드에서 직접 입력한다.
-`APP_URL`은 생성된 자기 주소(`https://<서비스명>.onrender.com`), `FRONTEND_URL`은 Pages 주소를 넣는다.
+`APP_URL`은 생성된 자기 주소(`https://xminihomep-backend.onrender.com` 같은 형태), `FRONTEND_URL`은 Pages 주소를 넣는다.
 
 ### 3. Cloudflare Pages (프론트)
 
@@ -107,7 +107,7 @@ Google Cloud Console > 사용자 인증 정보에서 **승인된 리디렉션 UR
 프론트 주소가 아니라 **백엔드 주소**라는 점에 주의.
 
 ```
-https://<서비스명>.onrender.com/login/oauth2/code/google
+https://xminihomep-backend.onrender.com/login/oauth2/code/google
 ```
 
 ### 콜드 스타트

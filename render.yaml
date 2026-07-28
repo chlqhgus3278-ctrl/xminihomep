@@ -3,7 +3,7 @@
 # 대시보드에서 New > Blueprint 로 이 파일을 읽히면 서비스가 생성된다.
 services:
   - type: web
-    name: folio-backend
+    name: xminihomep-backend
     runtime: docker
     plan: free
     region: singapore
@@ -29,7 +29,7 @@ services:
         sync: false
 
       # 이 서비스 자신의 공개 주소. 구글 OAuth 리다이렉트 URI가 여기서 파생된다.
-      #   예) https://folio-backend.onrender.com
+      #   예) https://xminihomep-backend.onrender.com
       - key: APP_URL
         sync: false
       # 로그인 성공 후 토큰을 들려 보낼 프론트 주소 (Cloudflare Pages)
