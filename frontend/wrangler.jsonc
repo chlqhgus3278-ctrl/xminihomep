@@ -1,0 +1,13 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "xminihomep",
+  "compatibility_date": "2026-07-30",
+  "assets": {
+    // vite build 산출물(dist)만 배포한다. Root directory를 frontend로 잡았을 때
+    // 이 파일 기준 상대경로이므로 "dist"여야 한다 ("frontend/dist"가 아님).
+    "directory": "dist",
+    // vue-router history 모드라 없는 경로는 index.html로 넘겨야 한다 (SPA 폴백).
+    // public/_redirects는 Cloudflare Pages 전용 기능이라 Workers 정적 배포에서는 무시되므로 이걸로 대체한다.
+    "not_found_handling": "single-page-application"
+  }
+}
